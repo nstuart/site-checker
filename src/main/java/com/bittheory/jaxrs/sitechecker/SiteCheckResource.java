@@ -4,7 +4,9 @@
  */
 package com.bittheory.jaxrs.sitechecker;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.core.Context;
@@ -38,13 +40,20 @@ public class SiteCheckResource {
     }
 
     /**
-     * Retrieves representation of an instance of com.bittheory.jaxrs.sitechecker.SiteCheckResource
+     * Retrieves representation of an instance of
+     * com.bittheory.jaxrs.sitechecker.SiteCheckResource
+     *
      * @return an instance of com.bittheory.jaxrs.sitechecker.Site
      */
     @GET
     @Produces("application/json")
-    public SiteResponse getJson(@QueryParam("url") String url) {
-        return reader.getUrl(url);
+    public List<SiteResponse> getJson(@QueryParam("urls[]") List<String> urls) {
+        List<SiteResponse> responses = new ArrayList<SiteResponse>();
+        for (String url : urls) {
+            SiteResponse resp = reader.getUrl(url);
+            resp.setResponse("");
+            responses.add(resp);
+        }
+        return responses;
     }
-
 }

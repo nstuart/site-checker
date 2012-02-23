@@ -1,0 +1,56 @@
+{
+    "actions":[{
+        "causes":[{
+            "shortDescription":"Started by an SCM change"
+        }]
+        },{},{},{},{},{},{
+        "failCount":0,
+        "skipCount":0,
+        "totalCount":259,
+        "urlName":"testReport"
+    },{},{},{},{}],
+    "building":false,
+    "description":null,
+    "duration":704365,
+    "fullDisplayName":"build #419",
+    "id":"2012-02-21_17-02-17",
+    "keepLog":false,
+    "number":419,
+    "result":"SUCCESS",
+    "timestamp":1329861737308,
+    "url":"http://jenkins-build:9000/job/build/419/",
+    "builtOn":"",
+    "changeSet":{
+        "items":[{
+            "date":"2012-02-21T21:54:54.182356Z",
+            "msg":"This is a test message.",
+            "paths":[{
+                "editType":"add",
+                "file":"/build/trunk/test1"
+            },{
+                "editType":"add",
+                "file":"/build/trunk/test2"
+            }],
+            "revision":26781,
+            "user":"tester"
+        },{
+            "date":"2012-02-21T21:50:11.673311Z",
+            "msg":"SVN Message",
+            "paths":[{
+                "editType":"edit",
+                "file":"/build/trunk/test"
+            }],
+            "revision":26780,
+            "user":"tester"
+        }],
+        "kind":"svn",
+        "revisions":[{
+            "module":"http://subversion.local/subversion/build/trunk",
+            "revision":26781
+        }]
+        },
+    "culprits":[{
+        "absoluteUrl":"http://jenkins-build:9000/user/tester",
+        "fullName":"tester"
+    }]
+    }

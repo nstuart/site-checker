@@ -4,19 +4,12 @@
  */
 package com.bittheory.jaxrs.sitechecker;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.Date;
-import javax.annotation.PostConstruct;
-import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
-import sun.net.httpserver.DefaultHttpServerProvider;
-import sun.net.www.http.HttpClient;
 
 /**
  *
@@ -35,6 +28,8 @@ public class URLReader {
             SiteResponse respRet = new SiteResponse();
             respRet.setResponseTime(end.getTime() - start.getTime());
             respRet.setCode(resp.getStatusLine().getStatusCode());
+            respRet.setResponse(respStr);
+            respRet.setSite(url);
             return respRet;
         } catch (Exception ex) {
             throw new RuntimeException(ex);

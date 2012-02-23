@@ -16,6 +16,7 @@ public class SiteResponse {
     private String site;
     private int code;
     private long responseTime;
+    private String response;
 
     public int getCode() {
         return code;
@@ -39,5 +40,13 @@ public class SiteResponse {
 
     public void setSite(String site) {
         this.site = site;
+    }
+
+    public String getResponse() {
+        return response;
+    }
+
+    public void setResponse(String response) {
+        this.response = response;
     }
 }
