@@ -26,6 +26,25 @@
             p.link{
                 float:left; padding-top: 8px; margin-bottom: 4px; overflow: hidden;
             }
+            #plot_holder .button {
+                position: absolute;
+                cursor: pointer;
+            }
+            #plot_holder div.button {
+                font-size: smaller;
+                color: #999;
+                background-color: #eee;
+                padding: 2px;
+            }
+            .message {
+                padding-left: 50px;
+                font-size: smaller;
+            }
+
+            .site{
+                overflow: hidden;
+            }
+
         </style>
     </head>
     <body>
@@ -40,7 +59,7 @@
                     <a class="brand" href="#">Site Checker</a>
                     <div class="nav-collapse">
                         <ul class="nav">
-                            <li class="active"><a href="/jaxrs-site-checker">Home</a></li>
+                            <li class="active"><a href="/site-checker">Home</a></li>
                         </ul>
                     </div>
                 </div>
@@ -48,36 +67,31 @@
         </div>
 
         <div class="container">
-            <div class="row">
-                <div class="sites">
+            <div class="row" id="sites_row">
 
-                </div>
             </div>
             <div class="row">
-                <div class="span6">
-                    <button class="btn btn-primary" onclick="update()">Update</button>
+                <div class="span12">
+                    <div id="plot_holder" style="width:100%;height:400px;">
+
+                    </div>
                 </div>
             </div>
-
         </div>
 
-        <div style="display: none;">
-            <div id="site_template">
-                <div class="content sites">
-                    <div class="span4">
-                        <img src="img/32.png" class="status" />
-                        <p class="link"><a href=""></a></p>
-                        <div class="alert alert-success" style="clear: both;">
-                            Status:
-                            <span class="responseCode">
-                                NONE
-                            </span>
-                            Time:
-                            <span class="responseTime">
-                                N/A
-                            </span>ms
-                        </div>
-                    </div>
+        <div id="site_template" style="display: none;">
+            <div>
+                <img src="img/32.png" class="status" />
+                <p class="link"><a href=""></a></p>
+                <div class="alert alert-success" style="clear: both;">
+                    Status:
+                    <span class="responseCode">
+                        NONE
+                    </span>
+                    Time:
+                    <span class="responseTime">
+                        N/A
+                    </span>ms
                 </div>
             </div>
         </div>
@@ -88,54 +102,91 @@
     <script type="text/javascript" src="js/pure.js"></script>
     <script type="text/javascript" src="js/bootstrap.js"></script>
     <script type="text/javascript" src="js/less-1.2.1.min.js"></script>
+    <script language="javascript" type="text/javascript" src="js/flot/jquery.flot.js"></script>
+    <script language="javascript" type="text/javascript" src="js/flot/jquery.flot.navigate.js"></script>
     <script type="text/javascript">
         var slow_img = "img/17.png"
         var medium_img = "img/26.png"
         var normal_img = "img/32.png"
         var sites = {siteResponse: [{ site: 'http://www.google.com' }, {site: 'http://slashdot.org'}, {site: 'http://www.arstechnica.com'}]}
-        var site_temp;
+        var site_ids = [];
+        var plot_timeout = false;
+        var plot_obj
         var directives = {
-            "div.span4":{
-                "resp<-siteResponse":{
-                    "p.link a": "resp.site",
-                    "p.link a@href": "resp.site",
-                    "div.alert span.responseCode":"resp.code",
-                    "div.alert span.responseTime":"resp.responseTime",
-                    "img.status@src": function(arg){
-                        if(arg.item.responseTime > 1000){
-                            return slow_img
-                        }else if(arg.item.responseTime > 500){
-                            return medium_img
-                        }else{
-                            return normal_img
-                        }
-                    }
+            "p.link a": "site.url",
+            "p.link a@href": "site.url",
+            "div.alert span.responseCode":"code",
+            "div.alert span.responseTime":"responseTime",
+            "img.status@src": function(arg){
+                if(arg.context.responseTime > 1000){
+                    return slow_img
+                }else if(arg.context.responseTime > 500){
+                    return medium_img
+                }else{
+                    return normal_img
                 }
             }
         }
         
         $(document).ready(function(){
-            update()
-            site_temp = $('#site_template div.content').compile(directives)
-            $('div.sites').render(sites,site_temp)
+            $.ajaxSetup({ cache: false });
+            site_temp = $('#site_template div').compile(directives)   
+            
+            $.get("/site-checker/resources/site/", {}, function(resp){
+                $.each(resp, function(i, site){
+                    site_ids.push(site.id)
+                    $("#sites_row").append("<div class='site span4' site='"+site.id+"'><div class='content'>Loading...</div></div>");
+                    update(site.id)
+                    var refresh = setInterval(function(){
+                        update(site.id)
+                    }, 10000)
+                })
+                $('div.site').click(function(){
+                    plot($(this).attr('site'))
+                })
+            })
         })
         
-        function update(){
-            var urls = []
-            
-            $.each(sites.siteResponse, function(index, site){                
-                urls.push(site.site)
+        function update(site_id){
+            $.ajax('resources/site/'+site_id+"/response/latest", {
+                method: 'GET'
+            }).success(function(resp){
+                $('div[site=' + site_id + "] div").render(resp,site_temp)
+                $('div[site=' + site_id + "] div").effect('highlight', {}, 2000)
             })
-            
-            $.ajax('resources/sitecheck', {
-                method: 'GET',
-                data: {urls: urls}
-            }).success(function(resp){
-                $('div.sites')
-                .render(resp,site_temp)
-            }).success(function(resp){
+        }
+        
+        function plot(site_id){
+            clearInterval(plot_timeout)            
+            var options = {
+                xaxis: { mode: "time" }
+            };
+            plot_obj = $.plot($("#plot_holder"), [getData(site_id)], options)
+            function pltUpdate(){
+                plot_obj.setData([getData(site_id)])
+                plot_obj.setupGrid()
+                plot_obj.draw()
+            }            
+            plot_timeout = setInterval(pltUpdate, 10000);
+        }
+        
+        function getData(site_id){
+            var start = new Date().getTime() - ((1000 * 60) * 10)
+            var data = []
+            $.ajax("resources/site/" + site_id + "/response", {
+                async: false,
+                method: "GET",
+                params: { start: (start) }
+            }).success(function(responses){
+                    
+                $.each(responses, function(i, resp){
+                    if(resp.createdAt > start){
+                        data.push([resp.createdAt, (resp.responseTime / 1000.0)])
+                    }
+                })
+            })
+            return data
                 
-            })
         }
     </script>
 </html>

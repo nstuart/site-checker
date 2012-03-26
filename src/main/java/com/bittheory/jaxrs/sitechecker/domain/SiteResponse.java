@@ -2,8 +2,13 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.bittheory.jaxrs.sitechecker;
+package com.bittheory.jaxrs.sitechecker.domain;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -11,9 +16,14 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author nick
  */
 @XmlRootElement
-public class SiteResponse {
-    
-    private String site;
+@Entity
+public class SiteResponse extends Base {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private int id;
+    @ManyToOne()
+    private Site site;
     private int code;
     private long responseTime;
     private String response;
@@ -34,11 +44,11 @@ public class SiteResponse {
         this.responseTime = responseTime;
     }
 
-    public String getSite() {
+    public Site getSite() {
         return site;
     }
 
-    public void setSite(String site) {
+    public void setSite(Site site) {
         this.site = site;
     }
 

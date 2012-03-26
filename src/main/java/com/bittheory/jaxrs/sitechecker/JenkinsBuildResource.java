@@ -4,6 +4,7 @@
  */
 package com.bittheory.jaxrs.sitechecker;
 
+import com.bittheory.jaxrs.sitechecker.domain.SiteResponse;
 import com.bittheory.jaxrs.sitechecker.jenkins.Build;
 import com.bittheory.jaxrs.sitechecker.jenkins.BuildContext;
 import javax.annotation.PostConstruct;
@@ -52,7 +53,7 @@ public class JenkinsBuildResource {
     @Produces("application/json")
     @Path("/last")
     public Build getLastBuildStatus(@PathParam("buildName") String buildName) {
-        SiteResponse urlResp = reader.getUrl(JENKINS_URL + buildName + "/lastBuild/api/json");
+        SiteResponse urlResp = new SiteResponse();// reader.getUrl(JENKINS_URL + buildName + "/lastBuild/api/json");
         Build bld = buildContext.unmarshal(urlResp.getResponse());
         return bld;
     }
