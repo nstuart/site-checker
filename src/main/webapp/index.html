@@ -1,0 +1,174 @@
+<!DOCTYPE HTML>
+
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>JSP Page</title>
+        <link href="css/bootstrap.css" type="text/css" rel="stylesheet"/>
+
+        <style>
+            body {
+                padding-top: 60px; 
+            }
+            .overlay{
+                opacity: .0;
+                background-image: url('img/ajax-loader.gif');
+                background-repeat: no-repeat;
+                background-color: #666;
+                position: absolute;
+                z-index: 10;
+            }
+            img.status{
+                float: left; width: 32px; height: 32px;
+            }
+            p.link{
+                float:left; padding-top: 8px; margin-bottom: 4px; overflow: hidden;
+            }
+            #plot_holder .button {
+                position: absolute;
+                cursor: pointer;
+            }
+            #plot_holder div.button {
+                font-size: smaller;
+                color: #999;
+                background-color: #eee;
+                padding: 2px;
+            }
+            .message {
+                padding-left: 50px;
+                font-size: smaller;
+            }
+
+            .site{
+                overflow: hidden;
+            }
+
+        </style>
+    </head>
+    <body>
+        <div class="navbar navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container">
+                    <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                    <a class="brand" href="#">Site Checker</a>
+                    <div class="nav-collapse">
+                        <ul class="nav">
+                            <li class="active"><a href="/site-checker">Home</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row" id="sites_row">
+
+            </div>
+            <div class="row">
+                <div class="span12">
+                    <div id="plot_holder" style="width:100%;height:400px;">
+
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="span1">
+                    <button class="button" onclick="update()">
+                        Show
+                    </button>
+                </div>
+            </div>
+        </div>
+        <script id="site_template" type="text/template">
+            
+                <img src="<%= status_img %>" class="status" />
+                <p class="link"><a href="<%= url %>"><%= url %></a></p>
+                <div class="alert alert-success" style="clear: both;">
+                    Status:
+                    <span class="responseCode">
+                        <%= code %>
+                    </span>
+                    Time:
+                    <span class="responseTime">
+                        <%= responseTime %>
+                    </span>ms
+                </div>
+            
+        </script>
+
+
+        <script type="text/javascript" src="js/jquery.js"></script>
+        <script type="text/javascript" src="js/jquery-ui-1.8.17.custom.min.js"></script>
+        <script type="text/javascript" src="js/bootstrap.js"></script>
+        <script type="text/javascript" src="js/less-1.2.1.min.js"></script>
+        <script language="javascript" type="text/javascript" src="js/flot/jquery.flot.js"></script>
+        <script language="javascript" type="text/javascript" src="js/flot/jquery.flot.navigate.js"></script>
+        <script language="javascript" type="text/javascript" src="js/underscore.js"></script>
+        <script language="javascript" type="text/javascript" src="js/backbone.js"></script>
+        <script language="javascript" type="text/javascript" src="js/models.js"></script>
+        <script type="text/javascript">
+            var sites;
+            var latestResponses = {};
+            var siteView;
+            $(document).ready(function(){
+                $.get("/site-checker/resources/site/", {}, function(resp){
+                    sites = new Sites(resp)
+                    sites.each(function(site){
+                        var latest = new SiteResponse({latest: true, site_id: site.get('id')});
+                        latest.fetch({
+                            success: function(){
+                                var view = new ResponseView({model: latest, className: 'span4' })
+                                $('#sites_row').append(view.el)
+                            }
+                        })
+                        latestResponses[latest] = 
+                        setInterval(function(){
+                            latest.fetch()
+                        }, 10000)
+                    })
+                })
+            })
+        </script>
+        
+        <script type="text/javascript">
+            var plot_timeout = false;
+            var plot_obj
+            function plot(site_id){
+                clearInterval(plot_timeout)            
+                var options = {
+                    xaxis: { mode: "time" }
+                };
+                plot_obj = $.plot($("#plot_holder"), [getData(site_id)], options)
+                function pltUpdate(){
+                    plot_obj.setData([getData(site_id)])
+                    plot_obj.setupGrid()
+                    plot_obj.draw()
+                }            
+                plot_timeout = setInterval(pltUpdate, 10000);
+            }
+        
+            function getData(site_id){
+                var start = new Date().getTime() - ((1000 * 60) * 10)
+                var data = []
+                $.ajax("resources/site/" + site_id + "/response", {
+                    async: false,
+                    method: "GET",
+                    params: { start: (start) }
+                }).success(function(responses){
+                    
+                    $.each(responses, function(i, resp){
+                        if(resp.createdAt > start){
+                            data.push([resp.createdAt, (resp.responseTime / 1000.0)])
+                        }
+                    })
+                })
+                return data
+                
+            }
+        </script>
+    </body>
+</html>
