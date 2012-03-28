@@ -38,12 +38,17 @@ SiteResponse = Backbone.Model.extend({
 
 //Needs to be passed a Site to work correctly.
 SiteResponses = Backbone.Collection.extend({
-    initialize  :   function(){
-        
-    },
+    site_id     :   null,
     model       :   SiteResponse,
+    initialize  :   function(options){
+        if(options.site_id){
+            this.site_id = options.site_id
+        }else{
+            alert('no site id given!')
+        }
+    },
     url         :   function(){
-        
+        return '/site-checker/resources/site/' + this.site_id + '/response'
     }
 })
 
@@ -75,5 +80,58 @@ ResponseView = Backbone.View.extend({
 })
 
 PlotView = Backbone.View.extend({
-    
+    start       :   new Date().getTime() - ((1000 * 60) * 60),
+    options     :   {
+        xaxis: {
+            mode: "time"
+        },
+        series: {
+            lines: {
+                show: true
+            }
+        },
+        grid: {
+            hoverable: true, 
+            clickable: true
+        }
+    },
+    plot_obj    :   null,
+    el          :   '#plot_holder',
+    initialize  :   function(options){
+        if(options.options){
+            this.options = options.options
+        }
+        if(options.start){
+            this.start = options.start
+        }
+        _.bindAll(this, 'render')
+        this.plot_obj = $.plot($(this.el), [this.getData()], this.options)
+        $(this.el).bind("plotclick", function (event, pos, item) {
+            if (item) {
+                this.plot_obj.highlight(item.series, item.datapoint);
+            }
+        });
+    },
+    render      :   function(){
+        this.plot_obj.setData([this.getData()])
+        this.plot_obj.setupGrid()
+        this.plot_obj.draw()
+        return this
+    },
+    getData     :   function(){
+        var data = []
+        this.model.fetch({
+            async   : false,
+            data    :   {
+                start: this.start
+            }
+        })
+        this.model.each(function(resp){
+            data.push([resp.get('createdAt'), (resp.get('responseTime')) / 1000.0])
+        })
+        return {
+            data: data, 
+            label: this.model.at(0).get('site').url
+        }
+    }
 })

@@ -75,16 +75,9 @@
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="span1">
-                    <button class="button" onclick="update()">
-                        Show
-                    </button>
-                </div>
-            </div>
         </div>
         <script id="site_template" type="text/template">
-            
+            <div class="site" site="<%= site.id %>">
                 <img src="<%= status_img %>" class="status" />
                 <p class="link"><a href="<%= url %>"><%= url %></a></p>
                 <div class="alert alert-success" style="clear: both;">
@@ -97,7 +90,7 @@
                         <%= responseTime %>
                     </span>ms
                 </div>
-            
+            </div>
         </script>
 
 
@@ -114,6 +107,23 @@
             var sites;
             var latestResponses = {};
             var siteView;
+            var plotView;
+            var responses;
+            var plotInterval;
+            
+            $(document).on('click', 'div.site', {},  function(){
+                var site_id = $(this).attr('site')
+                responses = new SiteResponses({site_id: site_id});
+                if(plotView == null){
+                    plotView = new PlotView({model: responses})
+                }else{
+                    plotView.model = responses
+                    plotView.render()
+                }
+                clearInterval(plotInterval)
+                plotInterval = setInterval(function(){ plotView.render() }, 10000)
+            })            
+            
             $(document).ready(function(){
                 $.get("/site-checker/resources/site/", {}, function(resp){
                     sites = new Sites(resp)
@@ -126,49 +136,12 @@
                             }
                         })
                         latestResponses[latest] = 
-                        setInterval(function(){
+                            setInterval(function(){
                             latest.fetch()
                         }, 10000)
                     })
                 })
             })
-        </script>
-        
-        <script type="text/javascript">
-            var plot_timeout = false;
-            var plot_obj
-            function plot(site_id){
-                clearInterval(plot_timeout)            
-                var options = {
-                    xaxis: { mode: "time" }
-                };
-                plot_obj = $.plot($("#plot_holder"), [getData(site_id)], options)
-                function pltUpdate(){
-                    plot_obj.setData([getData(site_id)])
-                    plot_obj.setupGrid()
-                    plot_obj.draw()
-                }            
-                plot_timeout = setInterval(pltUpdate, 10000);
-            }
-        
-            function getData(site_id){
-                var start = new Date().getTime() - ((1000 * 60) * 10)
-                var data = []
-                $.ajax("resources/site/" + site_id + "/response", {
-                    async: false,
-                    method: "GET",
-                    params: { start: (start) }
-                }).success(function(responses){
-                    
-                    $.each(responses, function(i, resp){
-                        if(resp.createdAt > start){
-                            data.push([resp.createdAt, (resp.responseTime / 1000.0)])
-                        }
-                    })
-                })
-                return data
-                
-            }
         </script>
     </body>
 </html>
