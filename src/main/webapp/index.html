@@ -106,23 +106,10 @@
         <script type="text/javascript">
             var sites;
             var latestResponses = {};
-            var siteView;
             var plotView;
-            var responses;
             var plotInterval;
             
-            $(document).on('click', 'div.site', {},  function(){
-                var site_id = $(this).attr('site')
-                responses = new SiteResponses({site_id: site_id});
-                if(plotView == null){
-                    plotView = new PlotView({model: responses})
-                }else{
-                    plotView.model = responses
-                    plotView.render()
-                }
-                clearInterval(plotInterval)
-                plotInterval = setInterval(function(){ plotView.render() }, 10000)
-            })            
+            $(document).on('click', 'div.site', {},  function(){plot($(this).attr('site'))})            
             
             $(document).ready(function(){
                 $.get("/site-checker/resources/site/", {}, function(resp){
@@ -133,6 +120,7 @@
                             success: function(){
                                 var view = new ResponseView({model: latest, className: 'span4' })
                                 $('#sites_row').append(view.el)
+                                plot(latest.get('site').id)
                             }
                         })
                         latestResponses[latest] = 
@@ -142,6 +130,17 @@
                     })
                 })
             })
+            function plot(site_id){
+                var responses = new SiteResponses({site_id: site_id});
+                if(plotView == null){
+                    plotView = new PlotView({model: responses})
+                }else{
+                    plotView.model = responses
+                    plotView.render()
+                }
+                clearInterval(plotInterval)
+                plotInterval = setInterval(function(){ plotView.render() }, 10000)
+            }
         </script>
     </body>
 </html>
