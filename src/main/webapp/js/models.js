@@ -20,7 +20,9 @@ SiteResponse = Backbone.Model.extend({
     },
     status_img: function(){
         var img = 'normal_img'
-        if(this.get('responseTime') > 1000){
+        if(this.get('code') > 400){
+            img = 'slow_img'
+        }else if(this.get('responseTime') > 1000){
             img = 'slow_img'
         }else if(this.get('responseTime') > 500){
             img = 'medium_img'

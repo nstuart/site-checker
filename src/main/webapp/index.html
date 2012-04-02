@@ -79,7 +79,7 @@
         <script id="site_template" type="text/template">
             <div class="site" site="<%= site.id %>">
                 <img src="<%= status_img %>" class="status" />
-                <p class="link"><a href="<%= url %>"><%= url %></a></p>
+                <p class="link" style="max-width: 230px; overflow: hidden;"><a href="<%= url %>"><%= url %></a></p>
                 <div class="alert alert-success" style="clear: both;">
                     Status:
                     <span class="responseCode">

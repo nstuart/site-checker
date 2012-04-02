@@ -8,6 +8,7 @@ import java.util.Set;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -17,6 +18,7 @@ import org.quartz.JobExecutionException;
  *
  * @author nstuart1
  */
+@DisallowConcurrentExecution
 public class CdiJob implements Job {
 
     public static final String JOB_CLASS_NAME = "CDI_JOB_CLASS_NAME";
