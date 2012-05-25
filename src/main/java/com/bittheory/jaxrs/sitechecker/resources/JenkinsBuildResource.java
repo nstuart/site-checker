@@ -2,8 +2,9 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.bittheory.jaxrs.sitechecker;
+package com.bittheory.jaxrs.sitechecker.resources;
 
+import com.bittheory.jaxrs.sitechecker.URLReader;
 import com.bittheory.jaxrs.sitechecker.domain.SiteResponse;
 import com.bittheory.jaxrs.sitechecker.jenkins.Build;
 import com.bittheory.jaxrs.sitechecker.jenkins.BuildContext;
