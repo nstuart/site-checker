@@ -5,22 +5,9 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>JSP Page</title>
         <link href="css/bootstrap.css" type="text/css" rel="stylesheet"/>
+        <link href="css/styles.css" type="text/css" rel="stylesheet"/>
 
         <style>
-            body {
-                padding-top: 60px; 
-            }
-            .overlay{
-                opacity: .0;
-                background-image: url('img/ajax-loader.gif');
-                background-repeat: no-repeat;
-                background-color: #666;
-                position: absolute;
-                z-index: 10;
-            }
-            img.status{
-                float: left; width: 32px; height: 32px;
-            }
             p.link{
                 float:left; padding-top: 8px; margin-bottom: 4px; overflow: hidden;
             }
@@ -41,6 +28,9 @@
 
             .site{
                 overflow: hidden;
+            }
+            .site i {
+                cursor: pointer;
             }
 
         </style>
@@ -65,6 +55,14 @@
         </div>
 
         <div class="container">
+            <div class="subnav ">
+                <ul class="nav nav-pills">
+                    <li>
+                        <a href="#" id="add_site_link">Add Site</a>
+                    </li>
+                </ul>
+            </div>
+
             <div class="row" id="sites_row">
 
             </div>
@@ -76,6 +74,26 @@
                 </div>
             </div>
         </div>
+
+        <div id="site_form" class="modal" style="display: none;">
+            <div class="modal-header">
+                <button class="close" data-dismiss="modal">x</button>
+                <h3>Site Information Form</h3>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <label>Site Name:</label>
+                    <input type="text" name="name"/>
+                    <label>URL:</label>
+                    <input type="text" name="url"/>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-primary save">Save</a>
+                <a href="#" class="btn" data-dismiss="modal">Close</a>
+            </div>
+
+        </div> 
         <script id="site_template" type="text/template">
             <div class="site" site="<%= site.id %>">
                 <img src="<%= status_img %>" class="status" />
@@ -89,6 +107,10 @@
                     <span class="responseTime">
                         <%= responseTime %>
                     </span>ms
+                    <div style="float: right;">
+                        <i class="icon-trash delete"></i>
+                        <i class="icon-signal plot"></i>
+                    </div>
                 </div>
             </div>
         </script>
@@ -96,42 +118,88 @@
 
         <script type="text/javascript" src="js/jquery.js"></script>
         <script type="text/javascript" src="js/jquery-ui-1.8.17.custom.min.js"></script>
+        <script type="text/javascript" src="js/jquery.toObject.js"></script>
+        <script type="text/javascript" src="js/form2js.js"></script>
         <script type="text/javascript" src="js/bootstrap.js"></script>
-        <script type="text/javascript" src="js/less-1.2.1.min.js"></script>
-        <script language="javascript" type="text/javascript" src="js/flot/jquery.flot.js"></script>
-        <script language="javascript" type="text/javascript" src="js/flot/jquery.flot.navigate.js"></script>
-        <script language="javascript" type="text/javascript" src="js/underscore.js"></script>
-        <script language="javascript" type="text/javascript" src="js/backbone.js"></script>
-        <script language="javascript" type="text/javascript" src="js/models.js"></script>
+        <script type="text/javascript" src="js/bootstrap-modal.js"></script>
+        <script type="text/javascript" src="js/flot/jquery.flot.js"></script>
+        <script type="text/javascript" src="js/flot/jquery.flot.navigate.js"></script>
+        <script type="text/javascript" src="js/underscore.js"></script>
+        <script type="text/javascript" src="js/backbone.js"></script>
+        <script type="text/javascript" src="js/models.js"></script>
         <script type="text/javascript">
             var sites;
             var latestResponses = {};
+            var views = []
             var plotView;
             var plotInterval;
             
-            $(document).on('click', 'div.site', {},  function(){plot($(this).attr('site'))})            
+            $(document).on('click', 'div.site i.plot', {},  function(){plot($(this).parents('div.site').attr('site'))})            
+            $(document).on('click', 'div.site i.delete', {},  function(){
+                var parentId = $(this).parents('div.site').attr('site')
+                sites.get(parentId).destroy({ 
+                    success: loadSites
+                })
+            })            
             
             $(document).ready(function(){
-                $.get("/site-checker/resources/site/", {}, function(resp){
-                    sites = new Sites(resp)
-                    sites.each(function(site){
-                        var latest = new SiteResponse({latest: true, site_id: site.get('id')});
-                        latest.fetch({
-                            success: function(){
-                                var view = new ResponseView({model: latest, className: 'span4' })
-                                $('#sites_row').append(view.el)
-                                plot(latest.get('site').id)
-                            }
-                        })
-                        latestResponses[latest] = 
-                            setInterval(function(){
-                            latest.fetch()
-                        }, 10000)
-                    })
+                $("#site_form").modal({show: false})
+                $("#site_form .save").click(createSite)
+                $("#add_site_link").click(function(){
+                    $("#site_form").modal("show")
                 })
+                sites = new Sites()
+                loadSites()
             })
-            function plot(site_id){
-                var responses = new SiteResponses({site_id: site_id});
+            
+            function loadSites(){
+                $.each(latestResponses, function(index, interval){
+                    clearInterval(interval)
+                })
+                $.each(views, function(index, view){
+                    view.remove()
+                })
+                views = []
+                latestResponses = {}
+                sites.fetch({
+                    success: function(){
+                        sites.each(function(site){
+                            site.latest.fetch({
+                                success: function(){
+                                    var view = new ResponseView({model: site.latest, className: 'span4' })
+                                    $('#sites_row').append(view.el)
+                                    views.push(view)
+                                    plot(site)
+                                }
+                            })
+                            latestResponses[site.latest] = 
+                                setInterval(function(){
+                                site.latest.fetch()
+                            }, 10000)
+                        })
+                    }
+                })
+            }
+            function createSite(){
+                var form = $('#site_form form')
+                var data = form.toObject()
+                var site = new Site(data)
+                site.save(null, {
+                    success: function(){
+                        alert("site saved")
+                        $("#site_form").modal("hide")
+                        loadSites()
+                    }
+                })
+                
+                return false;
+            }
+            
+            function plot(site){                
+                if(!isNaN(site)){
+                    site = sites.get(site)
+                }
+                var responses = site.responses
                 if(plotView == null){
                     plotView = new PlotView({model: responses})
                 }else{

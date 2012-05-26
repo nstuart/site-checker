@@ -1,7 +1,11 @@
 
 Site = Backbone.Model.extend({
-    defaults: {
-        url: null
+    urlRoot: "/site-checker/resources/site/",
+    initialize: function (){
+        this.responses = new SiteResponses()
+        this.responses.url = this.get('responses_url')
+        this.latest = new SiteResponse()
+        this.latest.url = this.get('latest_url')
     }
 })
 
@@ -28,13 +32,6 @@ SiteResponse = Backbone.Model.extend({
             img = 'medium_img'
         }
         return this.get(img)
-    },
-    url: function(){
-        if(this.get('latest')){
-            return '/site-checker/resources/site/' + this.get('site_id') + '/response/latest';
-        }else{
-            return '/site-checker/resources/site/' + this.get('site_id') + '/response/' + this.get('id');
-        }
     }
 })
 
@@ -43,14 +40,6 @@ SiteResponses = Backbone.Collection.extend({
     site_id     :   null,
     model       :   SiteResponse,
     initialize  :   function(options){
-        if(options.site_id){
-            this.site_id = options.site_id
-        }else{
-            alert('no site id given!')
-        }
-    },
-    url         :   function(){
-        return '/site-checker/resources/site/' + this.site_id + '/response'
     }
 })
 

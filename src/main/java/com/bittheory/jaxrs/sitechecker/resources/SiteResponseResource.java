@@ -61,7 +61,7 @@ public class SiteResponseResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<SiteResponse> list(@PathParam("siteId") Long id, @QueryParam("start") Long start) {
         if (start == null) {
-            return siteManager.load(id).getResponses();
+            return siteManager.lastResponses(id, 100);
         } else {
             return siteManager.responsesFrom(siteManager.load(id), start);
         }

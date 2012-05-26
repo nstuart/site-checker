@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author nstuart1
  */
-@Scheduled("0/10 * * ? * *")
+@Scheduled("0 * * ? * *")
 public class CheckSchedule implements Runnable{
 
     private Logger log = LoggerFactory.getLogger(CheckSchedule.class);

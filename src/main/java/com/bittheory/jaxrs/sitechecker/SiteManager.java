@@ -37,6 +37,7 @@ public class SiteManager {
 
     public Site create(Site newSite) {
         em.persist(newSite);
+        ping(newSite);
         return newSite;
     }
     
@@ -46,6 +47,19 @@ public class SiteManager {
         qr.setParameter("start", new Date(start));
         return qr.getResultList();
     }
+    
+    /**
+     * 
+     * @param site
+     * @param limit How many responses to limit
+     * @return 
+     */
+    public List<SiteResponse> lastResponses(long siteId, int limit){
+        Query qr = em.createQuery("SELECT r FROM SiteResponse r WHERE r.site.id = :site" , SiteResponse.class);
+        qr.setMaxResults(limit);
+        qr.setParameter("site", siteId);
+        return qr.getResultList();
+    }
 
     public SiteResponse ping(Site site) {
         site = em.find(Site.class, site.getId());
@@ -53,5 +67,12 @@ public class SiteManager {
         site.getResponses().add(resp);
         resp.setResponse(""); //dont save the response to the database...
         return resp;
+    }
+
+    public void delete(long id) {
+        Site site = load(id);
+        if(site != null){
+            em.remove(site);
+        }
     }
 }

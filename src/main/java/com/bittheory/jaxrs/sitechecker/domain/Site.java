@@ -7,6 +7,7 @@ package com.bittheory.jaxrs.sitechecker.domain;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -22,11 +23,23 @@ public class Site extends Base{
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     
+    @NotNull
+    private String name;
+    
     @OneToMany(mappedBy="site", cascade= CascadeType.ALL)
     private List<SiteResponse> responses = new ArrayList<SiteResponse>();
     
+    @NotNull
     private String url;
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+    
     public String getUrl() {
         return url;
     }
