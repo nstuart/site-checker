@@ -1,12 +1,23 @@
 <!DOCTYPE HTML>
-
-<html>
+<html ng-app="sitechecker">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>JSP Page</title>
         <link href="css/bootstrap.css" type="text/css" rel="stylesheet"/>
         <link href="css/styles.css" type="text/css" rel="stylesheet"/>
-
+        
+        
+        <script type="text/javascript" src="js/angular/angular.js"></script>
+        <script type="text/javascript" src="js/app.js"></script>
+        <script type="text/javascript" src="js/controllers.js"></script>
+        <script type="text/javascript" src="js/services.js"></script>
+        <script type="text/javascript" src="js/angular/angular-resource.js"></script>
+        <script type="text/javascript" src="js/jquery.js"></script>
+        <script type="text/javascript" src="js/flot/jquery.flot.js"></script>
+        
+        <script type="text/javascript" src="js/bootstrap.js"></script>
+        <script type="text/javascript" src="js/bootstrap-modal.js"></script>
+        
         <style>
             p.link{
                 float:left; padding-top: 8px; margin-bottom: 4px; overflow: hidden;
@@ -63,16 +74,8 @@
                 </ul>
             </div>
 
-            <div class="row" id="sites_row">
-
-            </div>
-            <div class="row">
-                <div class="span12">
-                    <div id="plot_holder" style="width:100%;height:400px;">
-
-                    </div>
-                </div>
-            </div>
+            <div ng-view></div>
+            
         </div>
 
         <div id="site_form" class="modal" style="display: none;">
@@ -92,123 +95,6 @@
                 <a href="#" class="btn btn-primary save">Save</a>
                 <a href="#" class="btn" data-dismiss="modal">Close</a>
             </div>
-
         </div> 
-        <script id="site_template" type="text/template">
-            <div class="site" site="<%= site.id %>">
-                <img src="<%= status_img %>" class="status" />
-                <p class="link" style="max-width: 230px; overflow: hidden;"><a href="<%= url %>"><%= url %></a></p>
-                <div class="alert alert-success" style="clear: both;">
-                    Status:
-                    <span class="responseCode">
-                        <%= code %>
-                    </span>
-                    Time:
-                    <span class="responseTime">
-                        <%= responseTime %>
-                    </span>ms
-                    <div style="float: right;">
-                        <i class="icon-trash delete"></i>
-                        <i class="icon-signal plot"></i>
-                    </div>
-                </div>
-            </div>
-        </script>
-
-
-        <script type="text/javascript" src="js/jquery.js"></script>
-        <script type="text/javascript" src="js/jquery-ui-1.8.17.custom.min.js"></script>
-        <script type="text/javascript" src="js/jquery.toObject.js"></script>
-        <script type="text/javascript" src="js/form2js.js"></script>
-        <script type="text/javascript" src="js/bootstrap.js"></script>
-        <script type="text/javascript" src="js/bootstrap-modal.js"></script>
-        <script type="text/javascript" src="js/flot/jquery.flot.js"></script>
-        <script type="text/javascript" src="js/flot/jquery.flot.navigate.js"></script>
-        <script type="text/javascript" src="js/underscore.js"></script>
-        <script type="text/javascript" src="js/backbone.js"></script>
-        <script type="text/javascript" src="js/models.js"></script>
-        <script type="text/javascript">
-            var sites;
-            var latestResponses = {};
-            var views = []
-            var plotView;
-            var plotInterval;
-            
-            $(document).on('click', 'div.site i.plot', {},  function(){plot($(this).parents('div.site').attr('site'))})            
-            $(document).on('click', 'div.site i.delete', {},  function(){
-                var parentId = $(this).parents('div.site').attr('site')
-                sites.get(parentId).destroy({ 
-                    success: loadSites
-                })
-            })            
-            
-            $(document).ready(function(){
-                $("#site_form").modal({show: false})
-                $("#site_form .save").click(createSite)
-                $("#add_site_link").click(function(){
-                    $("#site_form").modal("show")
-                })
-                sites = new Sites()
-                loadSites()
-            })
-            
-            function loadSites(){
-                $.each(latestResponses, function(index, interval){
-                    clearInterval(interval)
-                })
-                $.each(views, function(index, view){
-                    view.remove()
-                })
-                views = []
-                latestResponses = {}
-                sites.fetch({
-                    success: function(){
-                        sites.each(function(site){
-                            site.latest.fetch({
-                                success: function(){
-                                    var view = new ResponseView({model: site.latest, className: 'span4' })
-                                    $('#sites_row').append(view.el)
-                                    views.push(view)
-                                    plot(site)
-                                }
-                            })
-                            latestResponses[site.latest] = 
-                                setInterval(function(){
-                                site.latest.fetch()
-                            }, 10000)
-                        })
-                    }
-                })
-            }
-            function createSite(){
-                var form = $('#site_form form')
-                var data = form.toObject()
-                var site = new Site(data)
-                site.save(null, {
-                    success: function(){
-                        alert("site saved")
-                        $("#site_form").modal("hide")
-                        loadSites()
-                    }
-                })
-                
-                return false;
-            }
-            
-            function plot(site){                
-                if(!isNaN(site)){
-                    site = sites.get(site)
-                }
-                var responses = site.responses
-                if(plotView == null){
-                    plotView = new PlotView({model: responses})
-                }else{
-                    plotView.model = responses
-                    plotView.render()
-                }
-                clearInterval(plotInterval)
-                plotInterval = setInterval(function(){ plotView.render() }, 10000)
-            }
-        </script>
     </body>
 </html>

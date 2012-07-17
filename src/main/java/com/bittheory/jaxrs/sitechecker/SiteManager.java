@@ -6,6 +6,7 @@ package com.bittheory.jaxrs.sitechecker;
 
 import com.bittheory.jaxrs.sitechecker.domain.Site;
 import com.bittheory.jaxrs.sitechecker.domain.SiteResponse;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.Stateless;
@@ -55,10 +56,14 @@ public class SiteManager {
      * @return 
      */
     public List<SiteResponse> lastResponses(long siteId, int limit){
-        Query qr = em.createQuery("SELECT r FROM SiteResponse r WHERE r.site.id = :site" , SiteResponse.class);
+        Query qr = em.createQuery("SELECT r FROM SiteResponse r WHERE r.site.id = :site ORDER BY r.createdAt DESC" , SiteResponse.class);
         qr.setMaxResults(limit);
         qr.setParameter("site", siteId);
-        return qr.getResultList();
+        List<SiteResponse> resp = qr.getResultList();
+        //we want to go from oldest to newest....but select does newest to oldest to be sure to get the last 100 responses.
+        Collections.reverse(resp);
+        return resp;
+        
     }
 
     public SiteResponse ping(Site site) {
